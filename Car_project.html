@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Project</title>
+		<script type="text/javascript" src="d3-book-2.0.3/d3.js"></script>
+		<style type="text/css">
+			/* No style rules here yet */
+			rect:hover {
+				fill: red;
+			}
+
+			circle:hover {
+				fill:orange;
+
+			}
+			
+			#tooltip {
+				position: absolute;
+				width: 200px;
+				height: auto;
+				padding: 10px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			
+			#tooltip.hidden {
+				display: none;
+			}
+			
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 16px;
+				line-height: 20px;
+			}
+
+			p {
+				font-family: Helvetica, sans-serif;
+				font-size: 25px;
+			}
+
+			input[type=radio] {
+				margin-left: 40px;
+			}
+		
+		</style>
+	</head>
+	<body>
+		<div id="tooltip" class="hidden">
+			<p><strong>Gates Population Situation</strong></p>
+			<p><span id="value">100</span>%</p>
+		</div>
+
+
+		<script type="text/javascript">
+
+			//Width and height
+			var w = 1200;
+			var h = 1000;
+			var padding = 40;
+
+			var i;
+			var j;
+
+			
+			var gates = [[225,100],[610,200],[960,390],[200,160],[220,290],[350,420],[250,620],[975,107],[520,420],[650,560],[500,700],[650,320],[900,730],[600,950]];
+
+			var entrance = [[145,0],[990,340],[0,440],[410,990],[650,890],[965,63]];
+
+			var E1E2 = [[150,0,225,100],[225,100,420,175],[420,175,560,85],[560,85,610,200],[610,200,550,270],[550,270,570,300],[570,300,650,320],[650,320,760,360],[760,360,830,500],[830,500,740,650],[740,650,860,700],[860,700,900,730],[900,730,960,390],[960,390,990,340]];
+
+			var g1E5 = [[225,100,200,160],[200,160,180,200],[180,200,220,290],[220,290,270,380],[270,380,350,420],[350,420,410,490],[410,490,400,650],[400,650,250,620],[250,620,130,390],[130,390,0,450]];
+			
+			var g4E4 = [[200,160,480,310],[480,310,520,420],[520,420,610,400],[610,400,520,550],[520,550,650,560],[650,560,600,720],[600,720,500,700],[500,700,430,820],[430,820,340,800],[340,800,280,910],[280,910,420,1000]];
+
+			var g10s1 = [[500,700,500,760],[500,760,570,800],[570,800,580,850],[580,850,530,900],[530,900,510,920],[510,920,600,950]];
+
+			var g12e5 = [[900,730,930,800],[930,800,830,860],[830,860,720,950],[720,950,660,900]];
+
+
+			var tags = [[102,15,'Entr1'],[990,340,'Entr2'],[0,440,'Entr3'],[410,990,'Entr4'],[650,890,'Entr5'],[225,100,'G1'],[610,200,'G2'],[960,390,'G3'],[200,160,'G4'],[220,290,'G5'],[350,420,'G6'],[250,620,'G7'],[520,420,'G8'],[650,560,'G9'],[500,700,'G10'],[650,320,'G11'],[900,730,'G12'],[600,950,'S1'],[990,110,'Gates'],[990,75,'Entrances']];
+
+			var g1g5 = [[225,100,200,160],[200,160,180,200],[180,200,220,290]];
+
+			var g5g6g7e3 = [[220,290,270,380],[270,380,350,420],[250,620,130,390],[130,390,0,450]];
+
+			var g6g7 = [[350,420,410,490],[410,490,400,650],[400,650,250,620]];
+
+			var barChart = [[100,80,50,"#ed6324"],[118,50,80,"#f59425"],[136,55,75,"#f5b025"],[154,65,65,"#f5c125"],[50,460,80,"#ed6324"],[68,472,68,"#f59425"],[86,467,73,"#f5b025"],[104,495,45,"#f5c125"],[250,955,35,"#ed6324"],[268,925,65,"#f59425"],[286,915,75,"#f5b025"],[304,895,95,"#f5c125"],[630,800,70,"#ed6324"],[648,840,30,"#f59425"],[666,825,45,"#f5b025"],[684,775,95,"#f5c125"],[900,230,90,"#ed6324"],[918,240,80,"#f59425"],[936,275,45,"#f5b025"],[954,285,35,"#f5c125"]];
+		
+	
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+						.attr("id","stage");
+
+		var barcharts= svg.selectAll("bar")
+			   .data(barChart)
+			   .enter()
+			   .append("rect")
+			   .attr("x", function(d) {
+			   		return d[0];
+			   })
+			   .attr("y", function(d) {
+			   		return d[1];
+			   })
+			   .attr("width", 15)
+			   .attr("height", function(d) {
+			   		return d[2];
+			   })
+			   .attr("fill", function(d) {
+			   		return d[3];
+			   })
+			   .attr("display", "none");
+
+
+			svg.selectAll("rects")
+			   .data(entrance)
+			   .enter()
+			   .append("rect")
+			   .attr("x", function(d) {
+			   		return d[0];
+			   })
+			   .attr("y", function(d) {
+			   		return d[1];
+			   })
+			   .attr("width", 20)
+			   .attr("height", 20)
+			   .attr("fill", "#9a3451")
+			   .on("click", function() {
+			   		barcharts.attr("display", null);
+			   		});
+
+
+
+			  
+			  
+
+			   svg.selectAll("lines")
+			   	.data(g4E4)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4);
+
+			   	svg.selectAll("lines")
+			   	.data(E1E2)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4);
+
+			   	svg.selectAll("lines")
+			   	.data(g1E5)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4)
+			   	
+			
+
+			   	svg.selectAll("lines")
+			   	.data(g10s1)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4);
+
+			   	svg.selectAll("lines")
+			   	.data(g12e5)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4);
+			   	
+			   	svg.selectAll("circles")
+			   .data(gates)
+			   .enter()
+			   .append("circle")
+			   .attr("cx", function(d) {
+			   		return d[0];
+			   })
+			   .attr("cy", function(d) {
+			   		return d[1];
+			   })
+			   .attr("r", 10)
+			   .attr("fill", "#dfa92d");
+
+			   var clickeLine1 = 
+			   svg.selectAll("lines")
+			   	.data(g1g5)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4)
+			   	.on("click", function() {
+			   		clickeLine1.attr("stroke", "#53caf5")
+			   		.attr("stroke-width", 6);});
+
+			   	var clickeLine2 = 
+			   svg.selectAll("lines")
+			   	.data(g5g6g7e3)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4)
+			   	.on("click", function() {
+			   		clickeLine2.attr("stroke", "#529efa")
+			   		.attr("stroke-width", 8);});
+
+			   	var clickeLine3 = 
+			   svg.selectAll("lines")
+			   	.data(g6g7)
+			   	.enter()
+			   	.append("line")
+			   	.attr("class","lines")
+			   	.attr("x1",function(d){
+			   		return d[0];
+			   	})
+			   	.attr("y1",function(d){
+			   		return d[1];
+			   	})
+			   	.attr("x2",function(d){
+			   		return d[2];
+			   	})
+			   	.attr("y2",function(d){
+			   		return d[3];
+			   	})
+			   	.attr("stroke", "#9a3451")
+			   	.attr("stroke-width", 4)
+			   	.on("click", function() {
+			   		clickeLine3.attr("stroke", "#383fff")
+			   		.attr("stroke-width", 10);});
+			   
+
+		   	
+	for(i=0; i<tags.length; i++){
+	var text2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+	text2.setAttribute('x',tags[i][0]);
+	text2.setAttribute('y',tags[i][1]);
+	text2.setAttribute('font-size','20px');
+	text2.setAttribute("fill","#453f3f");
+	text2.innerHTML = tags[i][2];
+	document.getElementById("stage").appendChild(text2);
+	}
+
+
+
+</script>
+<br/><br/><br/><br/><br/><br/>
+<p>
+			<input type="radio" name="filterPreset" value="Distribution" checked="true"> None
+			<input type="radio" name="filterPreset" value="CarType1"> CarType1
+			<input type="radio" name="filterPreset" value="CarType2"> CarType2
+			<input type="radio" name="filterPreset" value="CarType3"> All Distribution
+		</p>
+
+		<script type="text/javascript">
+
+			var w = 1200;
+			var h = 1000;
+			var padding = 40;
+
+			var i;
+			var j;
+
+			var dataset = [];					//Initialize empty array
+			var numDataPoints = 200;			//Number of dummy data points to create
+			var xRange = 1000;					//Max range of new x values
+			var yRange = 1000;					//Max range of new y values
+			for (var i = 0; i < numDataPoints; i++) {					//Loop numDataPoints times
+				var newNumber1 = Math.floor(Math.random() * xRange);	//New random integer
+				var newNumber2 = Math.floor(Math.random() * yRange);	//New random integer
+				dataset.push([newNumber1, newNumber2]);					//Add new number to array
+			}
+
+			//Create scale functions
+			var xScale = d3.scaleLinear()
+								 .domain([0, 1000])
+								 .range([padding, w - padding / 2]);
+
+			var yScale = d3.scaleLinear()
+								 .domain([0, 1000])
+								 .range([h - padding, padding / 2]);
+
+			//Define X axis
+			var xAxis = d3.axisBottom()
+							  .scale(xScale)
+							  .ticks(5);
+
+			//Define Y axis
+			var yAxis = d3.axisLeft()
+							  .scale(yScale)
+							  .ticks(5);
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			//Create circles
+			var allCircles = svg.selectAll("circle")
+			   .data(dataset)
+			   .enter()
+			   .append("circle")
+			   .attr("cx", function(d) {
+			   		return xScale(d[0]);
+			   })
+			   .attr("cy", function(d) {
+			   		return yScale(d[1]);
+			   })
+			   .attr("r", 4);
+			
+			//Create X axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(0," + (h - padding) + ")")
+				.call(xAxis);
+			
+			//Create Y axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(" + padding + ",0)")
+				.call(yAxis);
+
+			//On radio button change, update styling
+			d3.selectAll("input")
+				.on("click", function() {
+
+					var view = d3.select(this).node().value;
+
+					//Reset all to black
+					allCircles.attr("fill", "black");
+
+					var midpoint = 500;
+					var colors = d3.schemeCategory10;
+
+					//Filter and highlight based on different conditions
+					switch (view) {
+
+						case "CarType1":
+							
+							var distance = 300;
+
+							allCircles.filter(function(d) {
+									return Math.abs(midpoint - d[0]) < distance && Math.abs(midpoint - d[1]) < distance;
+								})
+								.attr("fill", colors[1]);
+
+							break;
+
+						case "CarType2":
+							
+							var distance = 300;
+
+							allCircles.filter(function(d) {
+									return Math.abs(midpoint - d[0]) > distance || Math.abs(midpoint - d[1]) > distance;
+								})
+								.attr("fill", colors[3]);
+
+							break;
+
+						case "CarType3":
+							
+							//Top left
+							allCircles.filter(function(d) {
+									return d[0] <= midpoint && d[1] >= midpoint;
+								})
+								.attr("fill", colors[0]);
+							
+							//Top right
+							allCircles.filter(function(d) {
+									return d[0] > midpoint && d[1] >= midpoint;
+								})
+								.attr("fill", colors[1]);
+
+							//Bottom right
+							allCircles.filter(function(d) {
+									return d[0] > midpoint && d[1] < midpoint;
+								})
+								.attr("fill", colors[2]);
+
+							//Bottom left
+							allCircles.filter(function(d) {
+									return d[0] <= midpoint && d[1] < midpoint;
+								})
+								.attr("fill", colors[3]);
+
+							break;
+
+						case "Distribution":
+						default:
+							//Do nothing more
+					}
+
+				});
+			
+			var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13, 20, 18, 17, 16, 23, 25 ];
+
+			var xScale = d3.scaleBand()
+							.domain(d3.range(dataset.length))
+							.rangeRound([0, w])
+							.paddingInner(0.05);
+
+			var yScale = d3.scaleLinear()
+							.domain([0, d3.max(dataset)])
+							.range([0, h/2]);
+			
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			//Create bars
+			svg.selectAll("rect")
+			   .data(dataset)
+			   .enter()
+			   .append("rect")
+			   .attr("x", function(d, i) {
+			   		return xScale(i);
+			   })
+			   .attr("y", function(d) {
+			   		return h/2 - yScale(d);
+			   })
+			   .attr("width", xScale.bandwidth())
+			   .attr("height", function(d) {
+			   		return yScale(d);
+			   })
+			   .attr("fill", function(d) {
+					return "rgb(227, 155, " + Math.round(d * 8) + ")";
+			   })
+			   .on("mouseover", function(d) {
+
+					//Get this bar's x/y values, then augment for the tooltip
+					var xPosition = parseFloat(d3.select(this).attr("x")) + xScale.bandwidth() / 2 + w-75;
+					var yPosition = parseFloat(d3.select(this).attr("y")) / 2 + h +80;
+
+					//Update the tooltip position and value
+					d3.select("#tooltip")
+						.style("left", xPosition + "px")
+						.style("top", yPosition + "px")						
+						.select("#value")
+						.text(d);
+			   
+					//Show the tooltip
+					d3.select("#tooltip").classed("hidden", false);
+
+			   })
+			   .on("mouseout", function() {
+			   
+					//Hide the tooltip
+					d3.select("#tooltip").classed("hidden", true);
+					
+			   })
+			   .on("click", function() {
+			   		sortBars();
+			   });
+
+			//Define sort order flag
+			var sortOrder = false;
+			
+			//Define sort function
+			var sortBars = function() {
+
+				//Flip value of sortOrder
+			   	sortOrder = !sortOrder;
+
+				svg.selectAll("rect")
+				   .sort(function(a, b) {
+				   		if (sortOrder) {
+					   		return d3.ascending(a, b);
+				   		} else {
+					   		return d3.descending(a, b);
+				   		}
+				   	})
+				   .transition()
+				   .delay(function(d, i) {
+					   return i * 50;
+				   })
+				   .duration(1000)
+				   .attr("x", function(d, i) {
+				   		return xScale(i);
+				   });
+
+			};			
+
+			
+		</script>
+	</body>
+</html>
